@@ -9,5 +9,6 @@ namespace Redis.Services
 
         Task Delete(int Id);
         Task Update(WorkerDTO workerDTO, int Id);
+        Task New(WorkerDTO workerDTO);
     }
 }

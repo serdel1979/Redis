@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Redis.Model;
 using Redis.Repository;
 using Redis.Services;
+using Redis.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
 
 builder.Services.AddTransient<IWorkerService,WorkerService>();
+
+builder.Services.AddAutoMapper(typeof(MapperDTO));
 
 
 builder.Services.AddDbContext<ContextWork>(option =>
