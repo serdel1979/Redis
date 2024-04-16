@@ -36,12 +36,19 @@ namespace Redis.Services
             return _mapper.Map<WorkerDTO>(entity);
         }
 
-        public async Task<IQueryable<WorkerDTO>> GetFilter(string find)
+        public async Task<IEnumerable<WorkerDTO>> FindFilter(string find)
         {
-            var entities = _repository.GetAllFilter(w => w.Name.ToLower().Contains(find.ToLower()));
+            var entities = await _repository.GetAllFilter(w => w.Name.ToLower().Contains(find.ToLower())).ToListAsync();
 
-            return _mapper.Map<IQueryable<WorkerDTO>>(entities);
-         
+            return entities.Select(w=> _mapper.Map<WorkerDTO>(w));
+        }
+
+
+        public async Task<IEnumerable<WorkerDTO>> GetAll()
+        {
+            var entities = await _repository.GetAllFilter().ToListAsync();
+
+            return entities.Select(w => _mapper.Map<WorkerDTO>(w));
         }
 
         public async Task New(WorkerDTO workerDTO)
