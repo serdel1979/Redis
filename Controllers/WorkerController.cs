@@ -116,6 +116,7 @@ namespace Redis.Controllers
         {
             try
             {
+                await _workerService.Delete(Id);
                 ResponseDTO<bool> response = new ResponseDTO<bool>();
                 response.Success = true;
                 response.Data = true;

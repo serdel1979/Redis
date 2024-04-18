@@ -26,9 +26,10 @@ namespace Redis.Repository
         }
 
 
-        public IQueryable<TEntity> GetAllFilter(Expression<Func<TEntity, bool>>? filter = null)
+        public  IQueryable<TEntity> GetAllFilter(Expression<Func<TEntity, bool>>? filter = null)
         {
             IQueryable<TEntity> finds = filter == null ? _dbSet : _dbSet.Where(filter);
+
             return finds;
         }
 
