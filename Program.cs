@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Redis.Model;
 using Redis.Repository;
 using Redis.Services;
@@ -29,7 +30,7 @@ builder.Services.AddDbContext<ContextWork>(option =>
 
 builder.Services.AddStackExchangeRedisCache(option =>
 {
-    option.Configuration = "127.0.0.1:6379"; // o la dirección IP de la máquina host si corresponde
+    option.Configuration = builder.Configuration.GetConnectionString("Caching");
 });
 
 
