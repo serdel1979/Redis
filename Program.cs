@@ -4,6 +4,7 @@ using Redis.Model;
 using Redis.Repository;
 using Redis.Services;
 using Redis.Utils;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,7 @@ builder.Services.AddStackExchangeRedisCache(option =>
     option.Configuration = builder.Configuration.GetConnectionString("Caching");
 });
 
+builder.Services.AddSingleton<ConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Caching")));
 
 var app = builder.Build();
 

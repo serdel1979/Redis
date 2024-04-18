@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using Redis.DTO;
 using Redis.Model;
 using Redis.Repository;
+using StackExchange.Redis;
 using System.Buffers.Text;
 using System.Text;
 
@@ -15,12 +16,15 @@ namespace Redis.Services
         private readonly IRepository<Worker> _repository;
         private readonly IMapper _mapper;
         private readonly IDistributedCache _distributedCache;
-
-        public WorkerService(IRepository<Worker> repository, IMapper mapper, IDistributedCache distributedCache)
+        private readonly ConnectionMultiplexer _redisConnection;
+        public WorkerService(IRepository<Worker> repository, IMapper mapper, 
+            IDistributedCache distributedCache,
+            ConnectionMultiplexer redisConnection)
         {
             this._repository = repository;
             this._mapper = mapper;
             this._distributedCache = distributedCache;
+            this._redisConnection = redisConnection;
         }
         public async Task Delete(int Id)
         {
@@ -56,10 +60,12 @@ namespace Redis.Services
             var cacheKey = "listWorkers";
             string serializedWorkers;
             var listWorkers = new List<Worker>();
+            var redisDatabase = _redisConnection.GetDatabase();
 
-            var redisWorkers = await _distributedCache.GetAsync(cacheKey);
+            var redisWorkers = await redisDatabase.StringGetAsync(cacheKey);
+            //var redisWorkers = await _distributedCache.GetAsync(cacheKey);
 
-            if (redisWorkers is not null)
+            if (!redisWorkers.IsNull)
             {
                 serializedWorkers = Encoding.UTF8.GetString(redisWorkers);
                 listWorkers = JsonConvert.DeserializeObject<List<Worker>>(serializedWorkers);
@@ -67,14 +73,19 @@ namespace Redis.Services
             else
             {
                 listWorkers = await _repository.GetAllFilter().ToListAsync();
-                serializedWorkers = JsonConvert.SerializeObject(listWorkers);
-                redisWorkers = Encoding.UTF8.GetBytes(serializedWorkers);
+                var workersDTO = _mapper.Map<IEnumerable<WorkerDTO>>(listWorkers);
 
-                var options = new DistributedCacheEntryOptions()
-                                    .SetAbsoluteExpiration(DateTime.Now.AddMinutes(10))
-                                    .SetSlidingExpiration(TimeSpan.FromSeconds(2));
 
-                await _distributedCache.SetAsync(cacheKey,redisWorkers, options);
+                serializedWorkers = JsonConvert.SerializeObject(workersDTO);
+              //  redisWorkers = Encoding.UTF8.GetBytes(serializedWorkers);
+                await redisDatabase.StringSetAsync(cacheKey, serializedWorkers);
+
+
+                //var options = new DistributedCacheEntryOptions()
+                //                    .SetAbsoluteExpiration(DateTime.Now.AddMinutes(10))
+                //                    .SetSlidingExpiration(TimeSpan.FromSeconds(2));
+                //redisDatabase.StringSet(cacheKey, redisWorkers);
+               // await _distributedCache.SetAsync(cacheKey,redisWorkers, options);
             }
 
 
